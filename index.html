@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>Brainstorming — Mockup Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <header class="topbar">
+      <div class="brand" title="Brainstorming Mockup Generator">
+        <div class="brand-mark">B</div>
+        <div>
+          <strong>Brainstorming</strong>
+          <span>Mockup Generator</span>
+        </div>
+      </div>
+
+      <div class="project-name-wrap">
+        <input id="projectName" class="project-name" value="Untitled Mockup" aria-label="Project name">
+        <span id="saveStatus" class="save-status">Saved locally</span>
+      </div>
+
+      <nav class="top-actions" aria-label="Project actions">
+        <button class="tool-btn" id="newProjectBtn" title="New project">New</button>
+        <button class="tool-btn" id="saveProjectBtn" title="Save project JSON">Save</button>
+        <button class="tool-btn" id="openProjectBtn" title="Open project JSON">Open</button>
+        <input id="projectFileInput" type="file" accept="application/json,.json" hidden>
+        <button class="tool-btn primary" id="exportMenuBtn" aria-expanded="false">Export ▾</button>
+        <div class="menu export-menu" id="exportMenu" hidden>
+          <button data-export="png">Export PNG</button>
+          <button data-export="pdf">Export PDF</button>
+          <button data-export="print">Print</button>
+        </div>
+      </nav>
+    </header>
+
+    <div class="toolbar" role="toolbar" aria-label="Editor toolbar">
+      <div class="toolbar-group mobile-panel-controls">
+        <button class="text-btn" id="mobileLibraryBtn">Library</button>
+        <button class="text-btn" id="mobilePropertiesBtn">Properties</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)" disabled>↶</button>
+        <button class="icon-btn" id="redoBtn" title="Redo (Ctrl+Y)" disabled>↷</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="icon-btn active" id="selectToolBtn" title="Select tool (V)">↖</button>
+        <button class="icon-btn" id="handToolBtn" title="Pan tool (H)">✋</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="icon-btn" id="duplicateBtn" title="Duplicate (Ctrl+D)">⧉</button>
+        <button class="icon-btn danger" id="deleteBtn" title="Delete">⌫</button>
+        <button class="icon-btn" id="bringFrontBtn" title="Bring forward">⬆</button>
+        <button class="icon-btn" id="sendBackBtn" title="Send backward">⬇</button>
+      </div>
+      <div class="toolbar-group zoom-controls">
+        <button class="icon-btn" id="zoomOutBtn" title="Zoom out">−</button>
+        <select id="zoomSelect" aria-label="Zoom level">
+          <option value="0.25">25%</option>
+          <option value="0.5">50%</option>
+          <option value="0.75">75%</option>
+          <option value="1" selected>100%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+        </select>
+        <button class="icon-btn" id="zoomInBtn" title="Zoom in">+</button>
+        <button class="text-btn" id="fitBtn">Fit</button>
+      </div>
+      <div class="toolbar-group">
+        <label class="toggle-control"><input type="checkbox" id="gridToggle" checked><span>Grid</span></label>
+        <label class="toggle-control"><input type="checkbox" id="snapToggle" checked><span>Snap</span></label>
+      </div>
+      <div class="toolbar-group toolbar-grow"></div>
+      <div class="toolbar-group">
+        <select id="pageSizeSelect" aria-label="Canvas size">
+          <option value="desktop">Desktop 1440 × 900</option>
+          <option value="laptop">Laptop 1366 × 768</option>
+          <option value="tablet">Tablet 768 × 1024</option>
+          <option value="mobile">Mobile 390 × 844</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="custom">Custom size</option>
+        </select>
+        <button class="text-btn" id="previewBtn">Preview</button>
+      </div>
+    </div>
+
+    <div class="mobile-panel-backdrop" id="mobilePanelBackdrop"></div>
+
+    <main class="editor-layout">
+      <aside class="left-panel panel" id="leftPanel">
+        <div class="panel-tabs" role="tablist">
+          <button class="panel-tab active" data-left-tab="components">Components</button>
+          <button class="panel-tab" data-left-tab="pages">Pages</button>
+          <button class="panel-tab" data-left-tab="templates">Templates</button>
+        </div>
+
+        <section class="left-tab-content active" id="componentsTab">
+          <div class="library-search">
+            <input id="componentSearch" type="search" placeholder="Search components…" aria-label="Search components">
+          </div>
+          <div class="component-library" id="componentLibrary"></div>
+        </section>
+
+        <section class="left-tab-content" id="pagesTab">
+          <div class="pages-header">
+            <strong>Project Pages</strong>
+            <button class="small-btn" id="addPageBtn">+ Add</button>
+          </div>
+          <div class="pages-list" id="pagesList"></div>
+          <div class="page-settings">
+            <div class="field full"><label for="pageNameInput">Page name</label><input id="pageNameInput" type="text" value="Page 1"></div>
+            <div class="field full"><label for="pageBackgroundInput">Page background</label><input id="pageBackgroundInput" type="color" value="#ffffff"></div>
+          </div>
+          <div class="page-actions">
+            <button class="small-btn" id="duplicatePageBtn">Duplicate</button>
+            <button class="small-btn danger" id="deletePageBtn">Delete</button>
+          </div>
+        </section>
+
+        <section class="left-tab-content" id="templatesTab">
+          <div class="template-list" id="templateList"></div>
+        </section>
+      </aside>
+
+      <section class="workspace" id="workspace">
+        <div class="workspace-inner" id="workspaceInner">
+          <div class="artboard-stage" id="artboardStage">
+            <div class="artboard grid-enabled" id="artboard" tabindex="0" aria-label="Mockup canvas"></div>
+          </div>
+        </div>
+        <div class="workspace-status">
+          <span id="canvasSizeStatus">1440 × 900</span>
+          <span id="selectionStatus">No selection</span>
+          <span id="coordinateStatus">X: 0, Y: 0</span>
+        </div>
+      </section>
+
+      <aside class="right-panel panel" id="rightPanel">
+        <div class="panel-tabs" role="tablist">
+          <button class="panel-tab active" data-right-tab="properties">Properties</button>
+          <button class="panel-tab" data-right-tab="layers">Layers</button>
+        </div>
+
+        <section class="right-tab-content active" id="propertiesTab">
+          <div id="emptyProperties" class="empty-state">
+            <div class="empty-icon">◇</div>
+            <strong>Select an object</strong>
+            <p>Choose an item on the canvas to edit its size, position, colors, text, and other settings.</p>
+          </div>
+          <form id="propertiesForm" class="properties-form" hidden autocomplete="off">
+            <div class="property-section">
+              <h3>Object</h3>
+              <div class="field full">
+                <label for="propName">Layer name</label>
+                <input id="propName" data-prop="name" type="text">
+              </div>
+              <div class="four-cols">
+                <div class="field"><label>X</label><input id="propX" data-prop="x" type="number"></div>
+                <div class="field"><label>Y</label><input id="propY" data-prop="y" type="number"></div>
+                <div class="field"><label>W</label><input id="propW" data-prop="w" type="number" min="10"></div>
+                <div class="field"><label>H</label><input id="propH" data-prop="h" type="number" min="10"></div>
+              </div>
+              <div class="two-cols">
+                <div class="field"><label>Rotation</label><input id="propRotation" data-prop="rotation" type="number" min="-360" max="360"></div>
+                <div class="field"><label>Opacity</label><input id="propOpacity" data-prop="opacity" type="number" min="0" max="100"></div>
+              </div>
+              <div class="button-row">
+                <button type="button" class="small-btn" id="lockBtn">Lock</button>
+                <button type="button" class="small-btn" id="hideBtn">Hide</button>
+              </div>
+            </div>
+
+            <div class="property-section" id="contentSection">
+              <h3>Content</h3>
+              <div class="field full">
+                <label for="propText">Text</label>
+                <textarea id="propText" data-prop="text" rows="3"></textarea>
+              </div>
+              <div class="field full image-field" id="imageField" hidden>
+                <label for="imageUpload">Image source</label>
+                <input id="imageUpload" type="file" accept="image/*">
+                <button type="button" class="small-btn" id="removeImageBtn">Remove image</button>
+              </div>
+              <div class="field full url-field" id="urlField" hidden>
+                <label for="propUrl">URL / Link</label>
+                <input id="propUrl" data-prop="url" type="url" placeholder="https://example.com">
+              </div>
+            </div>
+
+            <div class="property-section">
+              <h3>Appearance</h3>
+              <div class="two-cols">
+                <div class="field"><label>Fill</label><input id="propBackground" data-prop="background" type="color"></div>
+                <div class="field"><label>Text</label><input id="propColor" data-prop="color" type="color"></div>
+                <div class="field"><label>Border</label><input id="propBorderColor" data-prop="borderColor" type="color"></div>
+                <div class="field"><label>Border px</label><input id="propBorderWidth" data-prop="borderWidth" type="number" min="0" max="20"></div>
+              </div>
+              <div class="two-cols">
+                <div class="field"><label>Radius</label><input id="propRadius" data-prop="radius" type="number" min="0" max="200"></div>
+                <div class="field"><label>Shadow</label><select id="propShadow" data-prop="shadow"><option value="none">None</option><option value="soft">Soft</option><option value="medium">Medium</option><option value="strong">Strong</option></select></div>
+              </div>
+            </div>
+
+            <div class="property-section" id="typographySection">
+              <h3>Typography</h3>
+              <div class="two-cols">
+                <div class="field"><label>Font size</label><input id="propFontSize" data-prop="fontSize" type="number" min="8" max="120"></div>
+                <div class="field"><label>Weight</label><select id="propFontWeight" data-prop="fontWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semi-bold</option><option value="700">Bold</option></select></div>
+              </div>
+              <div class="two-cols">
+                <div class="field"><label>Align</label><select id="propTextAlign" data-prop="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
+                <div class="field"><label>Line height</label><input id="propLineHeight" data-prop="lineHeight" type="number" min="0.8" max="3" step="0.1"></div>
+              </div>
+            </div>
+
+            <div class="property-section">
+              <h3>Arrange</h3>
+              <div class="align-grid">
+                <button type="button" data-align="left" title="Align left">⇤</button>
+                <button type="button" data-align="center" title="Center horizontally">↔</button>
+                <button type="button" data-align="right" title="Align right">⇥</button>
+                <button type="button" data-align="top" title="Align top">↥</button>
+                <button type="button" data-align="middle" title="Center vertically">↕</button>
+                <button type="button" data-align="bottom" title="Align bottom">↧</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="right-tab-content" id="layersTab">
+          <div class="layers-toolbar">
+            <span>Canvas layers</span>
+            <button class="small-btn" id="clearCanvasBtn">Clear</button>
+          </div>
+          <div class="layers-list" id="layersList"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="customSizeModal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="customSizeTitle">
+      <h2 id="customSizeTitle">Custom canvas size</h2>
+      <div class="two-cols">
+        <div class="field"><label for="customWidth">Width</label><input id="customWidth" type="number" min="200" max="5000" value="1200"></div>
+        <div class="field"><label for="customHeight">Height</label><input id="customHeight" type="number" min="200" max="5000" value="800"></div>
+      </div>
+      <div class="dialog-actions">
+        <button class="tool-btn" data-close-modal>Cancel</button>
+        <button class="tool-btn primary" id="applyCustomSizeBtn">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay preview-overlay" id="previewModal" hidden>
+    <div class="preview-dialog" role="dialog" aria-modal="true" aria-label="Mockup preview">
+      <div class="preview-header">
+        <strong>Preview</strong>
+        <button class="icon-btn" data-close-preview>×</button>
+      </div>
+      <div class="preview-body" id="previewBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
